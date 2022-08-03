@@ -1,6 +1,4 @@
-import imp
 from botbuilder.core import ActivityHandler, MessageFactory, TurnContext
-import copy
 from bot_core.utils import CRED_OPS, RESPONSE_HANDLER, post_message
 from bot_core.mist_api import fetch_marvis_response
 import json

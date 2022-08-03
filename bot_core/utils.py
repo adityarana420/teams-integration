@@ -1,5 +1,5 @@
 import os
-from botbuilder.core import ActivityHandler, MessageFactory, TurnContext
+from botbuilder.core import MessageFactory
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
