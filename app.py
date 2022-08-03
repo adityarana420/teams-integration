@@ -10,7 +10,7 @@ from botbuilder.core import (
 )
 from botbuilder.schema import Activity, ActivityTypes
 
-from bot_core.bot import EchoBot
+from bot_core.bot import BOT_PROCESSOR
 from config import DefaultConfigs
 
 from aioflask import Flask, request, jsonify
@@ -22,7 +22,7 @@ app = Flask(__name__)
 CONFIG = DefaultConfigs()
 
 # Create the Bot
-BOT = EchoBot()
+BOT = BOT_PROCESSOR()
 
 # Create adapter.
 # See https://aka.ms/about-bot-adapter to learn more about how bots work.
@@ -73,6 +73,7 @@ async def message():
         return resp
 
     activity = Activity().deserialize(body)
+    print("Activity: \n", activity)
     auth_header = request.headers["Authorization"] if "Authorization" in request.headers else ""
     response = await ADAPTER.process_activity(activity, auth_header, BOT.on_turn)
     if response:
