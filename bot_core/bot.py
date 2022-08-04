@@ -1,10 +1,15 @@
 from botbuilder.core import ActivityHandler, MessageFactory, TurnContext
-from bot_core.utils import CRED_OPS, RESPONSE_HANDLER, post_message
-from bot_core.mist_api import fetch_marvis_response
+from bot_core.utils import (
+    Error_Handler,
+    Response_Handler,
+    Cred_Ops,
+    post_message,
+    fetch_marvis_response
+)
 import json
 
-credentials = CRED_OPS()
-response_handler = RESPONSE_HANDLER()
+credentials = Cred_Ops()
+response_handler = Response_Handler()
 
 def _clean_user_input(text):
     text = text.strip()

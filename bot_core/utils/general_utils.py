@@ -17,14 +17,14 @@ async def post_message(turn_context, message):
         )
     return response
 
-class ERROR_HANDLER():
+class Error_Handler():
     def __init__(self) -> None:
         pass
 
     def credential_error():
         pass
 
-class CRED_OPS():
+class Cred_Ops():
     def __init__(self):
         pass
 
@@ -48,7 +48,7 @@ class CRED_OPS():
             return token, org
 
 
-class RESPONSE_HANDLER:
+class Response_Handler:
     def __init__(self):
         self.formatted_resp_lst = []
     

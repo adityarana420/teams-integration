@@ -10,7 +10,7 @@ from botbuilder.core import (
 )
 from botbuilder.schema import Activity, ActivityTypes
 
-from bot_core.bot import BOT_PROCESSOR
+from bot_core import BOT_PROCESSOR
 from config import DefaultConfigs
 
 from aioflask import Flask, request, jsonify
