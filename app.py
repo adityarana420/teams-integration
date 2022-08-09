@@ -75,7 +75,6 @@ async def message():
         return resp
 
     activity = Activity().deserialize(body)
-    print("Activity: \n", activity)
     auth_header = request.headers["Authorization"] if "Authorization" in request.headers else ""
     response = await ADAPTER.process_activity(activity, auth_header, BOT.on_turn)
     if response:
