@@ -20,36 +20,52 @@ async def post_message(turn_context, message):
 class Error_Handler():
     def __init__(self) -> None:
         pass
+    
+    @staticmethod
+    async def credential_error(turn_context, status_code):
+        if status_code == 401:
+            await post_message(turn_context, DEFAULT_RESPONSES["invalid_token"])
+    
+        elif status_code == 404:
+            await post_message(turn_context, DEFAULT_RESPONSES["invalid_org"])
 
-    def credential_error():
-        pass
 
 class Cred_Ops():
-    def __init__(self):
-        pass
+    def __init__(self, turn_context):
+        self.turn_context = turn_context
 
-    def fetch_channel_credentials(self):
+    def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
         org_id = os.environ.get("MIST_ORG_ID", "")
 
         return token, org_id
     
-    def fetch_credentials(self, channel_type):
+    def fetch_credentials(self):
         token = org = ""
+        channel_type = self.turn_context.activity.conversation.conversation_type
 
-        if channel_type == "msteams":
-            token, org = self.fetch_channel_credentials()
+        if channel_type == "personal":
+            token, org = self._fetch_channel_credentials()
             return token, org
 
-        elif channel_type == "webchat":
-            pass
+        elif channel_type == "channel":
+            token, org = self._fetch_channel_credentials()
+            return token, org
 
         else:
             return token, org
+    
+    async def verify_credentials(self, token, org):
+        if not (token and org):
+            await post_message(self.turn_context, DEFAULT_RESPONSES["invalid_creds"])
+            return
+        
+        return True
 
 
 class Response_Handler:
-    def __init__(self):
+    def __init__(self, marvis_resp):
+        self.marvis_resp = marvis_resp
         self.formatted_resp_lst = []
     
     def _text_handler(self, msg_block):
@@ -61,15 +77,13 @@ class Response_Handler:
         self.formatted_resp_lst.append(formatted_resp_text)
 
     def _entity_list_handler(self, msg_block):
-        print("2222222")
         formatted_resp_text = ""
         for idx, resp_block in enumerate(msg_block['response'][0]['list']):
-            formatted_resp_text = "{}*{}. `{}`*\n*- Details:* {}\n- *Try:* {}\n\n".format(formatted_resp_text, (idx+1), resp_block['title'], resp_block['description'], resp_block['display']['phrase'])
+            formatted_resp_text = "{}<h2><b>{}. <u>{}</u></b></h2><b>- Details:</b> {}<br><b>- Try:</b> {}<br><br>".format(formatted_resp_text, (idx+1), resp_block['title'], resp_block['description'], resp_block['display']['phrase'])
 
         self.formatted_resp_lst.append(formatted_resp_text)
 
     def _options_handler(self, msg_block):
-        print("++++++")
         formatted_resp_text = ""
 
         for idx, resp_block in enumerate(msg_block['response']):
@@ -92,10 +106,10 @@ class Response_Handler:
 
         self.formatted_resp_lst.append(formatted_resp_text)     
 
-    def generate_response_list(self, marvis_resp):
+    def generate_response_list(self):
         self.formatted_resp_lst = []
 
-        for msg_block in marvis_resp:
+        for msg_block in self.marvis_resp:
             if msg_block['type'] == 'text':
                 self._text_handler(msg_block)
 

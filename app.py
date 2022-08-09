@@ -2,6 +2,7 @@ import sys
 import os
 import traceback
 from datetime import datetime
+import time
 
 from botbuilder.core import (
     BotFrameworkAdapterSettings,
@@ -62,6 +63,7 @@ ADAPTER.on_turn_error = on_error
 
 @app.route("/api/messages", methods=['POST'])
 async def message():
+    start = time.time()
     if "application/json" in request.headers["Content-Type"]:
         body = request.get_json()
     else:
@@ -81,7 +83,7 @@ async def message():
                     message=response.body,
                     status=response.status
                 )
-
+    print("Time Taken", time.time() - start)
     return jsonify(success=True)
 
 
