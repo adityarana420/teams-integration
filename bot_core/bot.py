@@ -1,5 +1,4 @@
 from botbuilder.core import ActivityHandler, TurnContext
-from h11 import ERROR
 from bot_core.utils import (
     Error_Handler,
     Response_Handler,
@@ -9,11 +8,6 @@ from bot_core.utils import (
 )
 import json
 
-def _clean_user_input(text):
-    text = text.strip()
-    cleaned_text = text.replace("<at>Marvis-test</at>", "").strip() if text.find("<at>Marvis-test</at>") >= 0 else text
-    return cleaned_text
-
 class BOT_PROCESSOR(ActivityHandler):
     def _clean_user_input(self, text):
         text = text.strip()
@@ -22,7 +16,7 @@ class BOT_PROCESSOR(ActivityHandler):
 
     async def on_message_activity(self, turn_context: TurnContext):
         # clean input message
-        user_msg = _clean_user_input(turn_context.activity.text)
+        user_msg = self._clean_user_input(turn_context.activity.text)
 
         # initialising class for credentials
         credentials = Cred_Ops(turn_context)
