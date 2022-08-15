@@ -1,5 +1,8 @@
+import imp
 import os
+import re
 from botbuilder.core import MessageFactory
+from bot_core.utils.storage import Storage
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
@@ -7,8 +10,10 @@ DEFAULT_RESPONSES = {
     "empty_response": "Unable to generate response for your query",
     "invalid_token": "Invalid User Token! Please follow these steps to set your Token Key.\n1. Provide your token key by sending `Token <your token>` in the chat.\n2. Pin that message in the chat by selecting the message, then `More Actions > Pin to this conversation`",
     "invalid_org": "Org ID not found! Please follow these steps to set your Org ID.\n1. Provide your Org ID by sending `org_id <your org_id>` in the chat.\n2. Pin that message in the chat by selecting the message, then `More Actions > Pin to this conversation`",
-    "setting_token": "Your are setting Token key. Next step: *Pin this message to the conversation*",
-    "setting_org": "Your are setting Org ID. Next step: *Pin this message to the conversation*"
+    "setting_token": "Your are setting Token key. Please hold on...",
+    "setting_org": "Your are setting Org ID. Please hold on...",
+    "setting_creds_success": "Credentials set successfully!!!",
+    "setting_creds_error": "Unable to set Credentials :("
 }
 
 async def post_message(turn_context, message):
@@ -33,6 +38,7 @@ class Error_Handler():
 class Cred_Ops():
     def __init__(self, turn_context):
         self.turn_context = turn_context
+        pass
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
@@ -40,9 +46,14 @@ class Cred_Ops():
 
         return token, org_id
     
-    def fetch_credentials(self):
+    def _fetch_personal_credentials(self):
+        user_id = self.turn_context.activity.from_property.id
+        token, org_id = Storage.read_credentials(user_id)
+        
+        return token, org_id
+    
+    def fetch_credentials(self, channel_type):
         token = org = ""
-        channel_type = self.turn_context.activity.conversation.conversation_type
 
         if channel_type == "personal":
             token, org = self._fetch_channel_credentials()
@@ -61,11 +72,31 @@ class Cred_Ops():
             return
         
         return True
+    
+    async def is_setting_credentials(self, query):
+        user_id = self.turn_context.activity.from_property.id
+
+        if re.match("(?i)^(token ).{30,}", query):
+            message = DEFAULT_RESPONSES["setting_token"]
+            await post_message(self.turn_context, message)
+            message = DEFAULT_RESPONSES["setting_creds_success"] if Storage.set_token(user_id, query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+        
+        elif re.match("(?i)^(org_id ).{20,}", query):
+            message = DEFAULT_RESPONSES["setting_org"]
+            await post_message(self.turn_context, message)
+
+            message = DEFAULT_RESPONSES["setting_creds_success"] if Storage.set_org(user_id, query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+        
+
+        else:
+            return False
+
+        await post_message(self.turn_context, message)
+        return True
 
 
 class Response_Handler:
-    def __init__(self, marvis_resp):
-        self.marvis_resp = marvis_resp
+    def __init__(self):
         self.formatted_resp_lst = []
     
     def _text_handler(self, msg_block):
@@ -106,10 +137,10 @@ class Response_Handler:
 
         self.formatted_resp_lst.append(formatted_resp_text)     
 
-    def generate_response_list(self):
+    def generate_response_list(self, marvis_resp):
         self.formatted_resp_lst = []
 
-        for msg_block in self.marvis_resp:
+        for msg_block in marvis_resp:
             if msg_block['type'] == 'text':
                 self._text_handler(msg_block)
 
