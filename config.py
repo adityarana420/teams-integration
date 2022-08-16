@@ -12,3 +12,7 @@ class DefaultConfigs:
     APP_PASSWORD = os.environ.get("MicrosoftAppPassword", "")
     MIST_TOKEN = os.environ.get("MIST_CHANNEL_TOKEN", "")
     MIST_ORG = os.environ.get("MIST_ORG_ID", "")
+
+class DBConfigs:
+    MONGODB_PW = os.environ.get("MongoDB_pw", "")
+    # other databse configs go here
