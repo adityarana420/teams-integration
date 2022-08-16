@@ -2,7 +2,7 @@ import imp
 import os
 import re
 from botbuilder.core import MessageFactory
-from bot_core.utils.storage import Storage
+from bot_core.utils.storage import LocalStorage
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
@@ -38,7 +38,8 @@ class Error_Handler():
 class Cred_Ops():
     def __init__(self, turn_context):
         self.turn_context = turn_context
-        pass
+        self.user_id = self.turn_context.activity.from_property.id
+        self.local_storage = LocalStorage(self.user_id)
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
@@ -47,8 +48,7 @@ class Cred_Ops():
         return token, org_id
     
     def _fetch_personal_credentials(self):
-        user_id = self.turn_context.activity.from_property.id
-        token, org_id = Storage.read_credentials(user_id)
+        token, org_id = self.local_storage.fetch_credentials_for_user()
         
         return token, org_id
     
@@ -56,7 +56,7 @@ class Cred_Ops():
         token = org = ""
 
         if channel_type == "personal":
-            token, org = self._fetch_channel_credentials()
+            token, org = self._fetch_personal_credentials()
             return token, org
 
         elif channel_type == "channel":
@@ -74,18 +74,16 @@ class Cred_Ops():
         return True
     
     async def is_setting_credentials(self, query):
-        user_id = self.turn_context.activity.from_property.id
-
         if re.match("(?i)^(token ).{30,}", query):
             message = DEFAULT_RESPONSES["setting_token"]
             await post_message(self.turn_context, message)
-            message = DEFAULT_RESPONSES["setting_creds_success"] if Storage.set_token(user_id, query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+            message = DEFAULT_RESPONSES["setting_creds_success"] if self.local_storage.set_credentials("token", query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
         
         elif re.match("(?i)^(org_id ).{20,}", query):
             message = DEFAULT_RESPONSES["setting_org"]
             await post_message(self.turn_context, message)
 
-            message = DEFAULT_RESPONSES["setting_creds_success"] if Storage.set_org(user_id, query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+            message = DEFAULT_RESPONSES["setting_creds_success"] if self.local_storage.set_credentials("org_id", query.replace("org_id", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
         
 
         else:

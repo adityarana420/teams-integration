@@ -1,5 +1,5 @@
-from .cred_storage import (
-    Storage
+from .local_storage import (
+    LocalStorage
 )
 
-__all__ = ["Storage"]
+__all__ = ["LocalStorage"]
