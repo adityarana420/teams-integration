@@ -1,7 +1,7 @@
 import imp
 import os
 import re
-from botbuilder.core import MessageFactory
+from botbuilder.core import MessageFactory, MemoryStorage
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
 STORAGE = LocalStorage
@@ -41,6 +41,7 @@ class Cred_Ops():
     def __init__(self, turn_context):
         self.turn_context = turn_context
         self.user_id = self.turn_context.activity.from_property.id
+        self.memory_storage = MemoryStorage()
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
@@ -139,19 +140,27 @@ class Response_Handler:
     def generate_response_list(self, marvis_resp):
         self.formatted_resp_lst = []
 
-        for msg_block in marvis_resp:
-            if msg_block['type'] == 'text':
-                self._text_handler(msg_block)
+        for num, msg_block in enumerate(marvis_resp):
+            if msg_block.get('type') in ['text', 'entityList', 'options', 'table']:
+                if msg_block['type'] == 'text':
+                    self._text_handler(msg_block)
 
-            elif msg_block['type'] == 'entityList':
-                self._entity_list_handler(msg_block)
-            
-            elif msg_block['type'] == 'options':
-                self._options_handler(msg_block)
+                elif msg_block['type'] == 'entityList':
+                    self._entity_list_handler(msg_block)
 
-            elif msg_block['type'] == 'table':
-                self._table_handler(msg_block)
-        
+                elif msg_block['type'] == 'options':
+                    self._options_handler(msg_block)
+
+                elif msg_block['type'] == 'table':
+                    self._table_handler(msg_block)
+
+            elif isinstance(msg_block, dict):
+                formatted_response_text = "<h2><u><b>Issue</u> {}</b></h2>".format(num+1) if len(marvis_resp) > 1 else "<h2><u><b>Issues:</b></u></h2>"
+                for key in msg_block.keys():
+                    formatted_response_text = "{}<b> + {}:</b> {}<br><br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]).capitalize())
+
+                self.formatted_resp_lst.append(formatted_response_text)
+
         if len(self.formatted_resp_lst) == 0:
             self.formatted_resp_lst.append(DEFAULT_RESPONSES["empty_response"])
         
