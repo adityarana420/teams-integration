@@ -4,6 +4,8 @@ import re
 from botbuilder.core import MessageFactory
 from bot_core.utils.storage import LocalStorage, MongoDB
 
+STORAGE = LocalStorage
+
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
     "invalid_creds": "Something went wrong with fetching the credentials...\n*Please make sure token and org ID are properly set.*",
@@ -39,11 +41,6 @@ class Cred_Ops():
     def __init__(self, turn_context):
         self.turn_context = turn_context
         self.user_id = self.turn_context.activity.from_property.id
-        self.storage = MongoDB(self.user_id)
-    
-    def test_mongodb(self):
-        print("testing")
-        self.mongo.insert_entry()
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
@@ -52,7 +49,7 @@ class Cred_Ops():
         return token, org_id
     
     def _fetch_personal_credentials(self):
-        token, org_id = self.storage.fetch_credentials_for_user()
+        token, org_id = STORAGE.fetch_credentials_for_user(self.user_id)
         
         return token, org_id
     
@@ -81,13 +78,13 @@ class Cred_Ops():
         if re.match("(?i)^(token ).{30,}", query):
             message = DEFAULT_RESPONSES["setting_token"]
             await post_message(self.turn_context, message)
-            message = DEFAULT_RESPONSES["setting_creds_success"] if self.storage.set_credentials("token", query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "token", query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
         
         elif re.match("(?i)^(org_id ).{20,}", query):
             message = DEFAULT_RESPONSES["setting_org"]
             await post_message(self.turn_context, message)
 
-            message = DEFAULT_RESPONSES["setting_creds_success"] if self.storage.set_credentials("org_id", query.replace("org_id", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "org_id", query.replace("org_id", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
         
 
         else:
@@ -156,6 +153,6 @@ class Response_Handler:
                 self._table_handler(msg_block)
         
         if len(self.formatted_resp_lst) == 0:
-            self.formatted_resp_lst(DEFAULT_RESPONSES["empty_response"])
+            self.formatted_resp_lst.append(DEFAULT_RESPONSES["empty_response"])
         
         return self.formatted_resp_lst

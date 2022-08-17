@@ -4,10 +4,11 @@ import json
 class LocalStorage:
     CREDS_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "credentials/user_creds.json")
     
-    def __init__(self, user_id):
-       self.user_id = user_id
+    def __init__(self):
+        pass
     
-    def _read_creds_from_file(self):
+    @staticmethod
+    def _read_creds_from_file():
         try:
             all_users_creds = json.load(open(LocalStorage.CREDS_FILE_PATH))
         except Exception as e:
@@ -15,20 +16,22 @@ class LocalStorage:
             all_users_creds = {}
         return all_users_creds
     
-    def fetch_credentials_for_user(self):
-        all_users_creds = self._read_creds_from_file()
+    @staticmethod
+    def fetch_credentials_for_user(user_id):
+        all_users_creds = LocalStorage._read_creds_from_file()
 
-        token = all_users_creds.get(self.user_id, {}).get("token", "")
-        org_id = all_users_creds.get(self.user_id, {}).get("org_id", "")
+        token = all_users_creds.get(user_id, {}).get("token", "")
+        org_id = all_users_creds.get(user_id, {}).get("org_id", "")
 
         return token, org_id
     
-    def set_credentials(self, key, value):
-        all_users_creds = self._read_creds_from_file()
+    @staticmethod
+    def set_credentials(user_id, key, value):
+        all_users_creds = LocalStorage._read_creds_from_file()
 
-        if self.user_id in all_users_creds.keys():
+        if user_id in all_users_creds.keys():
             try:
-                all_users_creds.get(self.user_id)[key] = value
+                all_users_creds.get(user_id)[key] = value
                 json.dump(all_users_creds, open(LocalStorage.CREDS_FILE_PATH, "w"))
 
             except Exception as e:
@@ -37,7 +40,7 @@ class LocalStorage:
         
         else:
             try:
-                all_users_creds[self.user_id] = {key: value}
+                all_users_creds[user_id] = {key: value}
                 json.dump(all_users_creds, open(LocalStorage.CREDS_FILE_PATH, "w"))
 
             except Exception as e:

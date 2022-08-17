@@ -1,36 +1,27 @@
-from config import DBConfigs
-import pymongo
-from cachetools import TTLCache
+from config import MongoConfigs
+from cachetools import TTLCache, cached
 
-MONGODB_URL = "mongodb+srv://rana699:{}@cluster0.oujmu.mongodb.net/?retryWrites=true&w=majority".format(DBConfigs.MONGODB_PW)
+cache = TTLCache(maxsize=200, ttl=14*24*3600)
 
 class MongoDB:
+    def __init__(self):
+        pass
     
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.mongo_client = pymongo.MongoClient(MONGODB_URL)
-        self.cred_collection = self.mongo_client["TeamsBotDB"]["credentials"]
-    
-    def insert_entry(self):
-        data = {
-            "user_id": "",
-            "token": "",
-            "org_id": ""
-        }
-        self.cred_collection.insert_one(data)
-    
-    def fetch_credentials_for_user(self):
-        key = {'user_id': self.user_id}
-        user_creds = self.cred_collection.find_one(key)
+    @staticmethod
+    @cached(cache)
+    def fetch_credentials_for_user(user_id):
+        key = {'user_id': user_id}
+        user_creds = MongoConfigs.COLLECTION.find_one(key)
 
         token = user_creds.get("token", "")
         org_id = user_creds.get("org_id", "")
 
         return token, org_id
     
-    def set_credentials(self, key, value):
+    @staticmethod
+    def set_credentials(user_id, key, value):
         find_key = {
-            'user_id': self.user_id
+            'user_id': user_id
         }
         data = {
             '$set': {
@@ -38,7 +29,7 @@ class MongoDB:
             }
         }
         try:
-            self.cred_collection.update_one(find_key, data, upsert=True)
+            MongoConfigs.COLLECTION.update_one(find_key, data, upsert=True)
         except Exception as e:
             print(f"Unable to insert. Exception {e} occurred...")
 
