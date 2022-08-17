@@ -1,10 +1,9 @@
-import imp
 import os
 import re
 from botbuilder.core import MessageFactory, MemoryStorage
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
-STORAGE = LocalStorage
+STORAGE = MongoDB
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
@@ -48,7 +47,7 @@ class Cred_Ops():
         org_id = os.environ.get("MIST_ORG_ID", "")
 
         return token, org_id
-    
+
     def _fetch_personal_credentials(self):
         token, org_id = STORAGE.fetch_credentials_for_user(self.user_id)
         

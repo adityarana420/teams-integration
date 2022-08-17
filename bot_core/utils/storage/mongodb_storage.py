@@ -6,16 +6,27 @@ cache = TTLCache(maxsize=200, ttl=14*24*3600)
 class MongoDB:
     def __init__(self):
         pass
-    
-    @staticmethod
-    @cached(cache)
-    def fetch_credentials_for_user(user_id):
-        key = {'user_id': user_id}
-        user_creds = MongoConfigs.COLLECTION.find_one(key)
 
+    @cached(cache)
+    def _fetch_all_user_creds():
+        creds = list(MongoConfigs.COLLECTION.find())
+        return creds
+
+    @staticmethod
+    def re_cache():
+        cache.clear()
+        MongoDB._fetch_all_user_creds()
+
+    @staticmethod
+    def fetch_credentials_for_user(user_id):
+        creds = MongoDB._fetch_all_user_creds()
+        print(creds)
+        user_creds = {}
+        for cred in creds:
+            if cred["user_id"] == user_id:
+                user_creds = cred
         token = user_creds.get("token", "")
         org_id = user_creds.get("org_id", "")
-
         return token, org_id
     
     @staticmethod
@@ -33,6 +44,7 @@ class MongoDB:
         except Exception as e:
             print(f"Unable to insert. Exception {e} occurred...")
 
+        MongoDB.re_cache()
         return True
 
 
