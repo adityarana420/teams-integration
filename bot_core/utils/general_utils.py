@@ -2,7 +2,7 @@ import imp
 import os
 import re
 from botbuilder.core import MessageFactory
-from bot_core.utils.storage import LocalStorage, MongoDB
+from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
 STORAGE = LocalStorage
 
