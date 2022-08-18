@@ -1,5 +1,4 @@
 from botbuilder.core import ActivityHandler, TurnContext
-from flask import request
 from bot_core.utils import (
     Error_Handler,
     Response_Handler,
@@ -19,12 +18,16 @@ class BOT_PROCESSOR(ActivityHandler):
         cleaned_text = text.replace("<at>Marvis-test</at>", "").strip() if text.find("<at>Marvis-test</at>") >= 0 else text
         return cleaned_text
 
-    def _get_request_metadata(self, turn_context: TurnContext):
+    def _get_request_metadata(self, turn_context: TurnContext, org_id):
         metadata = {
             "time_zone": turn_context.activity.local_timezone,
             "utc_timestamp": str(turn_context.activity.timestamp),
             "local_timestamp": str(turn_context.activity.local_timestamp),
             "first_name": turn_context.activity.from_property.name.split()[0],
+            "user_id": turn_context.activity.from_property.id,
+            "conversation_type": turn_context.activity.conversation.conversation_type,
+            "conversation_id": turn_context.activity.conversation.id,
+            "org_id": org_id,
             "org_user": "True"
         }
         return metadata
@@ -47,8 +50,7 @@ class BOT_PROCESSOR(ActivityHandler):
         # verify credentials
         if not await credentials.verify_credentials(token, org): return
 
-        request_metadata = self._get_request_metadata(turn_context)
-        request_metadata["org_id"] = org
+        request_metadata = self._get_request_metadata(turn_context, org)
         api_response = fetch_marvis_response(user_msg, token, org, request_metadata)
 
         # handling error response code

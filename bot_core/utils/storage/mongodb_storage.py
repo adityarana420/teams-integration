@@ -20,7 +20,6 @@ class MongoDB:
     @staticmethod
     def fetch_credentials_for_user(user_id):
         creds = MongoDB._fetch_all_user_creds()
-        print(creds)
         user_creds = {}
         for cred in creds:
             if cred["user_id"] == user_id:
