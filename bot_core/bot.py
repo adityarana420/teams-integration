@@ -55,7 +55,8 @@ class BOT_PROCESSOR(ActivityHandler):
 
         # handling error response code
         if api_response.status_code != 200:
-            await Error_Handler.credential_error(turn_context, api_response.status_code)
+            error_handler = Error_Handler(turn_context, api_response.status_code)
+            await error_handler.status_code_handler()
             return
 
         response_text = json.loads(api_response.text)

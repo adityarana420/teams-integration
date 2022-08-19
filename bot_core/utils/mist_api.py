@@ -1,4 +1,3 @@
-from curses import meta
 import requests
 import json
 
@@ -23,6 +22,15 @@ def fetch_marvis_response(query_msg, mist_token, org_id, metadata):
     url = "https://api.mistsys.com/api/v1/labs/orgs/" + org_id + "/chatbot_converse"
    
     payload, headers = _get_payload_header(query_msg, mist_token, metadata)
-    
-    response = requests.request("POST", url, headers=headers, data=payload)
+    try:
+      response = requests.request("POST", url, headers=headers, data=payload, timeout=0.1)
+    except requests.exceptions.RequestException as e:
+      print("Exception occurred: {}".format(e))
+      response = requests.Response()
+      response.status_code = 408
+      return response
+    except Exception as e:
+      response = requests.Response()
+      response.status_code = 500
+      return response
     return response

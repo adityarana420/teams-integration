@@ -3,18 +3,20 @@ import re
 from botbuilder.core import MessageFactory, MemoryStorage
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
-STORAGE = MongoDB
+STORAGE = LocalStorage
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
     "invalid_creds": "Something went wrong with fetching the credentials...\n*Please make sure token and org ID are properly set.*",
     "empty_response": "Unable to generate response for your query",
-    "invalid_token": "Invalid User Token! Please follow these steps to set your Token Key.\n1. Provide your token key by sending `Token <your token>` in the chat.\n2. Pin that message in the chat by selecting the message, then `More Actions > Pin to this conversation`",
-    "invalid_org": "Org ID not found! Please follow these steps to set your Org ID.\n1. Provide your Org ID by sending `org_id <your org_id>` in the chat.\n2. Pin that message in the chat by selecting the message, then `More Actions > Pin to this conversation`",
+    "invalid_token": "Invalid User Token! Please provide correct token by sending `token <token_key>`",
+    "invalid_org": "Org ID not found! Please provide correc Org ID by sending `org_id <org_id>",
     "setting_token": "Your are setting Token key. Please hold on...",
     "setting_org": "Your are setting Org ID. Please hold on...",
     "setting_creds_success": "Credentials set successfully!!!",
-    "setting_creds_error": "Unable to set Credentials :("
+    "setting_creds_error": "Unable to set Credentials :(",
+    "timeout_error": "I am currently having trouble responding. Please try later :(",
+    "server_error": "Some error occurred. Please try later. If the issue persist, contact the Administrator",
 }
 
 async def post_message(turn_context, message):
@@ -24,16 +26,32 @@ async def post_message(turn_context, message):
     return response
 
 class Error_Handler():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, turn_context, status_code):
+        self.turn_context = turn_context
+        self.status_code = status_code
     
-    @staticmethod
-    async def credential_error(turn_context, status_code):
-        if status_code == 401:
-            await post_message(turn_context, DEFAULT_RESPONSES["invalid_token"])
+    async def _credential_error(self):
+        if self.status_code == 401:
+            await post_message(self.turn_context, DEFAULT_RESPONSES["invalid_token"])
     
-        elif status_code == 404:
-            await post_message(turn_context, DEFAULT_RESPONSES["invalid_org"])
+        elif self.status_code == 404:
+            await post_message(self.turn_context, DEFAULT_RESPONSES["invalid_org"])
+    
+    async def _timeout_error(self):
+        await post_message(self.turn_context, DEFAULT_RESPONSES["timeout_error"])
+    
+    async def _server_error(self):
+        await post_message(self.turn_context, DEFAULT_RESPONSES["server_error"])
+
+    async def status_code_handler(self):
+        if self.status_code == 401 or self.status_code == 404:
+            await self._credential_error()
+
+        elif self.status_code == 408:
+            await self._timeout_error()
+
+        else:
+            await self._server_error()
 
 
 class Cred_Ops():
@@ -154,8 +172,11 @@ class Response_Handler:
                     self._table_handler(msg_block)
 
             elif isinstance(msg_block, dict):
-                formatted_response_text = "<h2><u><b>Issue</u> {}</b></h2>".format(num+1) if len(marvis_resp) > 1 else "<h2><u><b>Issues:</b></u></h2>"
+                formatted_response_text = ""
                 for key in msg_block.keys():
+                    if key == 'plain_text':
+                        formatted_response_text = "{}{}<br><br>".format(formatted_response_text, msg_block[key])
+                        continue
                     formatted_response_text = "{}<b> + {}:</b> {}<br><br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]).capitalize())
 
                 self.formatted_resp_lst.append(formatted_response_text)
