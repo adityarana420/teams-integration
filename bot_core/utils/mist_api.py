@@ -23,7 +23,7 @@ def fetch_marvis_response(query_msg, mist_token, org_id, metadata):
    
     payload, headers = _get_payload_header(query_msg, mist_token, metadata)
     try:
-      response = requests.request("POST", url, headers=headers, data=payload, timeout=0.1)
+      response = requests.request("POST", url, headers=headers, data=payload, timeout=10)
     except requests.exceptions.RequestException as e:
       print("Exception occurred: {}".format(e))
       response = requests.Response()

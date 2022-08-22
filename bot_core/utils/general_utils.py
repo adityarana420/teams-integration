@@ -3,7 +3,7 @@ import re
 from botbuilder.core import MessageFactory, MemoryStorage
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
-STORAGE = LocalStorage
+STORAGE = MongoDB
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",
@@ -124,60 +124,25 @@ class Response_Handler:
         formatted_resp_text = "\n".join(msg_block['response'])
         self.formatted_resp_lst.append(formatted_resp_text)
 
-    def _entity_list_handler(self, msg_block):
-        formatted_resp_text = ""
-        for idx, resp_block in enumerate(msg_block['response'][0]['list']):
-            formatted_resp_text = "{}<h2><b>{}. <u>{}</u></b></h2><b>- Details:</b> {}<br><b>- Try:</b> {}<br><br>".format(formatted_resp_text, (idx+1), resp_block['title'], resp_block['description'], resp_block['display']['phrase'])
-
-        self.formatted_resp_lst.append(formatted_resp_text)
-
-    def _options_handler(self, msg_block):
-        formatted_resp_text = ""
-
-        for idx, resp_block in enumerate(msg_block['response']):
-            details = ""
-            for details_block in resp_block['response']:
-                if not details_block['type'] == 'text': continue
-                details = "{}  **+** {}<br>".format(details, details_block['response'][0])
-            formatted_resp_text = "{}<h2>{}. <b><u>{}</u></b> : {}\n*- Details:*\n{}\n\n".format(formatted_resp_text, (idx+1), resp_block['title'], resp_block['description'], details)
-
-        self.formatted_resp_lst.append(formatted_resp_text)
-
-    def _table_handler(self, msg_block):
-        formatted_resp_text = ""
-
-        for idx, resp_block in enumerate(msg_block['response'][0]['item_list']):
-            name = resp_block['Name']
-            site = resp_block['Site']
-            mac = resp_block['Mac']
-            formatted_resp_text = "{}<h2>{}. <b><u>{}</u></b></h2><b>+ Mac:</b> {}<br><b>+ Site:</b> {}<br><br>".format(formatted_resp_text, idx+1, name, mac, site)
-
-        self.formatted_resp_lst.append(formatted_resp_text)     
-
     def generate_response_list(self, marvis_resp):
         self.formatted_resp_lst = []
 
         for num, msg_block in enumerate(marvis_resp):
-            if msg_block.get('type') in ['text', 'entityList', 'options', 'table']:
+            if msg_block.get('type') in ['text']:
                 if msg_block['type'] == 'text':
                     self._text_handler(msg_block)
-
-                elif msg_block['type'] == 'entityList':
-                    self._entity_list_handler(msg_block)
-
-                elif msg_block['type'] == 'options':
-                    self._options_handler(msg_block)
-
-                elif msg_block['type'] == 'table':
-                    self._table_handler(msg_block)
 
             elif isinstance(msg_block, dict):
                 formatted_response_text = ""
                 for key in msg_block.keys():
                     if key == 'plain_text':
-                        formatted_response_text = "{}{}<br><br>".format(formatted_response_text, msg_block[key])
-                        continue
-                    formatted_response_text = "{}<b> + {}:</b> {}<br><br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]).capitalize())
+                        formatted_response_text = "{}{}<br>".format(formatted_response_text, msg_block[key])
+                    
+                    elif key in ['text', 'category', 'reason', 'recommendation']:
+                        formatted_response_text = "{}<b> + Details:</b> {}<br>".format(formatted_response_text, str(msg_block[key])) if key in ['text'] else "{}<b> + {}:</b> {}<br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]))
+
+                    else:
+                        formatted_response_text = "{}<b> + {}:</b> {}<br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]))
 
                 self.formatted_resp_lst.append(formatted_response_text)
 
