@@ -27,7 +27,7 @@ def fetch_marvis_response(query_msg, mist_token, org_id, metadata):
     except requests.exceptions.RequestException as e:
       print("Exception occurred: {}".format(e))
       response = requests.Response()
-      response.status_code = 408
+      response.status_code = 504
       return response
     except Exception as e:
       response = requests.Response()

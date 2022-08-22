@@ -10,11 +10,11 @@ DEFAULT_RESPONSES = {
     "invalid_creds": "Something went wrong with fetching the credentials...\n*Please make sure token and org ID are properly set.*",
     "empty_response": "Unable to generate response for your query",
     "invalid_token": "Invalid User Token! Please provide correct token by sending `token <token_key>`",
-    "invalid_org": "Org ID not found! Please provide correc Org ID by sending `org_id <org_id>",
+    "invalid_org": "Org ID not found! Please provide correcr Org ID by sending `org_id <org_id>",
     "setting_token": "Your are setting Token key. Please hold on...",
     "setting_org": "Your are setting Org ID. Please hold on...",
-    "setting_creds_success": "Credentials set successfully!!!",
-    "setting_creds_error": "Unable to set Credentials :(",
+    "setting_creds_success": "Credentials are set successfully!!!",
+    "setting_creds_error": "Unable to set the Credentials :(",
     "timeout_error": "I am currently having trouble responding. Please try later :(",
     "server_error": "Some error occurred. Please try later. If the issue persist, contact the Administrator",
 }
@@ -47,7 +47,7 @@ class Error_Handler():
         if self.status_code == 401 or self.status_code == 404:
             await self._credential_error()
 
-        elif self.status_code == 408:
+        elif self.status_code == 504:
             await self._timeout_error()
 
         else:
@@ -57,18 +57,15 @@ class Error_Handler():
 class Cred_Ops():
     def __init__(self, turn_context):
         self.turn_context = turn_context
-        self.user_id = self.turn_context.activity.from_property.id
-        self.memory_storage = MemoryStorage()
+        self.user_id = turn_context.activity.from_property.id
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
         org_id = os.environ.get("MIST_ORG_ID", "")
-
         return token, org_id
 
     def _fetch_personal_credentials(self):
         token, org_id = STORAGE.fetch_credentials_for_user(self.user_id)
-        
         return token, org_id
     
     def fetch_credentials(self, channel_type):
@@ -76,34 +73,28 @@ class Cred_Ops():
 
         if channel_type == "personal":
             token, org = self._fetch_personal_credentials()
-            return token, org
-
         elif channel_type == "channel":
             token, org = self._fetch_channel_credentials()
-            return token, org
-
-        else:
-            return token, org
+    
+        return token, org
     
     async def verify_credentials(self, token, org):
         if not (token and org):
             await post_message(self.turn_context, DEFAULT_RESPONSES["invalid_creds"])
-            return
-        
+            return False
+
         return True
     
     async def is_setting_credentials(self, query):
         if re.match("(?i)^(token ).{30,}", query):
             message = DEFAULT_RESPONSES["setting_token"]
             await post_message(self.turn_context, message)
-            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "token", query.replace("token", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "token", re.sub("(?i)token", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
         
         elif re.match("(?i)^(org_id ).{20,}", query):
             message = DEFAULT_RESPONSES["setting_org"]
             await post_message(self.turn_context, message)
-
-            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "org_id", query.replace("org_id", "").strip()) else DEFAULT_RESPONSES["setting_creds_error"]
-        
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "org_id", re.sub("(?i)org_id", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
 
         else:
             return False
@@ -118,9 +109,6 @@ class Response_Handler:
     
     def _text_handler(self, msg_block):
         formatted_resp_text = ""
-
-        if msg_block['response'][0].find('please visit') != -1: return
-
         formatted_resp_text = "\n".join(msg_block['response'])
         self.formatted_resp_lst.append(formatted_resp_text)
 
@@ -129,8 +117,7 @@ class Response_Handler:
 
         for num, msg_block in enumerate(marvis_resp):
             if msg_block.get('type') in ['text']:
-                if msg_block['type'] == 'text':
-                    self._text_handler(msg_block)
+                self._text_handler(msg_block)
 
             elif isinstance(msg_block, dict):
                 formatted_response_text = ""

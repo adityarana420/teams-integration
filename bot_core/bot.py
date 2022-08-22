@@ -15,7 +15,7 @@ class BOT_PROCESSOR(ActivityHandler):
 
     def _clean_user_input(self, text):
         text = text.strip()
-        cleaned_text = text.replace("<at>Marvis-test</at>", "").strip() if text.find("<at>Marvis-test</at>") >= 0 else text
+        cleaned_text = text.replace("<at>Marvis-test</at>", "").strip()
         return cleaned_text
 
     def _get_request_metadata(self, turn_context: TurnContext, org_id):
@@ -40,7 +40,7 @@ class BOT_PROCESSOR(ActivityHandler):
 
         channel_type = turn_context.activity.conversation.conversation_type
 
-        # if user is setting credentials
+        # check if user is setting credentials in personal chat
         if channel_type == "personal":
             if await credentials.is_setting_credentials(user_msg): return
 
@@ -64,7 +64,7 @@ class BOT_PROCESSOR(ActivityHandler):
 
         # creating simple text response for user
         formatted_response_lst = self.response_handler.generate_response_list(marvis_response)
-
         for formatted_response in formatted_response_lst:
             response = await post_message(turn_context, formatted_response)
+
         return response
