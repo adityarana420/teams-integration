@@ -1,6 +1,6 @@
 import os
 import re
-from botbuilder.core import MessageFactory, MemoryStorage
+from botbuilder.core import MessageFactory
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
 STORAGE = MongoDB
