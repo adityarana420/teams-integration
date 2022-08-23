@@ -9,14 +9,14 @@
 3. This will create an app called `Marvis`. Go to `Configure` > `Basic Information` tab on the left side pane and Edit all the required informations like: **Descriptions**, **Developer Information**, **Privacy Policy** etc. Leave  `Application(Client) ID` empty for now and save.
 4. Now, go to `App Features` tab and under **Select a feature to add**, choose `Bot`. Under **Identify your bot** choose `Create a new bot`.
 5. You will be redirected to **Bot Management** page. There, click on `New Bot` and give it a name, `Marvis`, and hit **Add**.
-6. After successful creation. The bot endpoint address you see here will have to point towards you backend web application. We'll come back to this later.
+6. After successful creation. The bot endpoint address you see here will have to point towards your backend web application. We'll come back to this later.
 7. Open [Azure Portal](portal.azure.com), login with your Azure ID, and redirect to `App Registration` section. You will see a new application created with name **Marvis**. Open the application and copy `Application(client) ID` and paste it in the **Application(Client) ID** section which was left blank earlier.
 8. Again, redirect to `Configure > App Features`, select `Bot`, but this time, choose `Enter a Bot ID` and paste the same App ID that you copied. Choose all scopes, i.e., **Personal**, and **Teams** and click on Save.
 
 
 ### <u>Step 2:</u> Generating your Microsoft App ID & Password
 1. The Microsoft App ID would be the `Application(client) ID` you copied from Azure Portal.
-2. In your Azure Portal, redirect to `App Registrations` section and open you bot application. Go to `Certificates and Secrets` tab on the left pane and click on create `New Client Secret`.
+2. In your Azure Portal, redirect to `App Registrations` section and open your bot application. Go to `Certificates and Secrets` tab on the left pane and click on create `New Client Secret`.
 3. Give it a description and expiration periods. Note: You need to regenrate the password once it expires. Click on Create.
 4. The Password value is stored in the tab `Value`. Copy it and save it somewhere. You won't be able to view it later.
 
