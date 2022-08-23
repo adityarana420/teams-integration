@@ -13,7 +13,7 @@ class LocalStorage:
     @staticmethod
     def re_cache():
         cache.clear()
-        LocalStorage._fetch_all_user_creds()
+        LocalStorage._read_creds_from_file()
     
     @staticmethod
     @cached(cache)

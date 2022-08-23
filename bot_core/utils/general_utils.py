@@ -3,7 +3,7 @@ import re
 from botbuilder.core import MessageFactory
 from bot_core.utils.storage import LocalStorage, MongoDB, CustomStorage
 
-STORAGE = MongoDB
+STORAGE = LocalStorage
 
 DEFAULT_RESPONSES = {
     "error": "Something went wrong...",

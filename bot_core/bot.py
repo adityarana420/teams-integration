@@ -9,16 +9,16 @@ from bot_core.utils import (
 import json
 
 class BOT_PROCESSOR(ActivityHandler):
-    def _clean_user_input(self, text):
+    def _clean_user_input(self, text, app_name):
         text = text.strip()
-        cleaned_text = text.replace("<at>Marvis-test</at>", "").strip()
+        cleaned_text = text.replace("<at>{}</at>".format(app_name), "").strip()
         return cleaned_text
 
     async def on_message_activity(self, turn_context: TurnContext):
         credentials = Cred_Ops(turn_context)
 
         # clean input message
-        user_msg = self._clean_user_input(turn_context.activity.text)
+        user_msg = self._clean_user_input(turn_context.activity.text, turn_context.activity.recipient.name)
 
         channel_type = turn_context.activity.conversation.conversation_type
 

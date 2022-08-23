@@ -1,2 +1,3 @@
 .env
 .DS_Store
+utils/storage/credentials/user_creds.json
