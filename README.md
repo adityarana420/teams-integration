@@ -10,7 +10,7 @@
 4. Now, go to `App Features` tab and under **Select a feature to add**, choose `Bot`. Under **Identify your bot** choose `Create a new bot`.
 5. You will be redirected to **Bot Management** page. There, click on `New Bot` and give it a name, `Marvis`, and hit **Add**.
 6. After successful creation. The bot endpoint address you see here will have to point towards you backend web application. We'll come back to this later.
-7. Open [Azure Portal](portal.azure.com), login with your Azure ID, and redirect to `App Registration` section. You will see a new application created with name **Marvis**. Open the application and copy `Application(client) ID` and paste it in the `Step 3`'s **Application(Client) ID** section which was left blank earlier.
+7. Open [Azure Portal](portal.azure.com), login with your Azure ID, and redirect to `App Registration` section. You will see a new application created with name **Marvis**. Open the application and copy `Application(client) ID` and paste it in the **Application(Client) ID** section which was left blank earlier.
 8. Again, redirect to `Configure > App Features`, select `Bot`, but this time, choose `Enter a Bot ID` and paste the same App ID that you copied. Choose all scopes, i.e., **Personal**, and **Teams** and click on Save.
 
 
