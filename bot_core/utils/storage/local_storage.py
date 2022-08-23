@@ -45,7 +45,7 @@ class LocalStorage:
             else:
                 all_users_creds[user_id] = {key: value}
 
-            json.dump(all_users_creds, open(LocalStorage.CREDS_FILE_PATH, "w"))
+            json.dump(all_users_creds, open(LocalStorage.CREDS_FILE_PATH, "w+"))
 
         except Exception as e:
             print(f"Unable to write credentials due to exception {e}")
