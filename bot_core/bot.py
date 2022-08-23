@@ -9,10 +9,6 @@ from bot_core.utils import (
 import json
 
 class BOT_PROCESSOR(ActivityHandler):
-    def __init__(self):
-        super().__init__()
-        self.response_handler = Response_Handler()
-
     def _clean_user_input(self, text):
         text = text.strip()
         cleaned_text = text.replace("<at>Marvis-test</at>", "").strip()
@@ -63,7 +59,7 @@ class BOT_PROCESSOR(ActivityHandler):
         marvis_response = response_text['data']
 
         # creating simple text response for user
-        formatted_response_lst = self.response_handler.generate_response_list(marvis_response)
+        formatted_response_lst = Response_Handler.generate_response_list(marvis_response)
         for formatted_response in formatted_response_lst:
             response = await post_message(turn_context, formatted_response)
 

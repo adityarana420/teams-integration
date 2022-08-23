@@ -67,16 +67,30 @@ class Cred_Ops():
     def _fetch_personal_credentials(self):
         token, org_id = STORAGE.fetch_credentials_for_user(self.user_id)
         return token, org_id
-    
+
     def fetch_credentials(self, channel_type):
         token = org = ""
-
         if channel_type == "personal":
             token, org = self._fetch_personal_credentials()
         elif channel_type == "channel":
             token, org = self._fetch_channel_credentials()
     
         return token, org
+
+    async def is_setting_credentials(self, query):
+        if re.match("(?i)^(token ).{30,}", query):
+            message = DEFAULT_RESPONSES["setting_token"]
+            await post_message(self.turn_context, message)
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "token", re.sub("(?i)token", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+        elif re.match("(?i)^(org_id ).{20,}", query):
+            message = DEFAULT_RESPONSES["setting_org"]
+            await post_message(self.turn_context, message)
+            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "org_id", re.sub("(?i)org_id", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
+        else:
+            return False
+
+        await post_message(self.turn_context, message)
+        return True
     
     async def verify_credentials(self, token, org):
         if not (token and org):
@@ -84,40 +98,21 @@ class Cred_Ops():
             return False
 
         return True
-    
-    async def is_setting_credentials(self, query):
-        if re.match("(?i)^(token ).{30,}", query):
-            message = DEFAULT_RESPONSES["setting_token"]
-            await post_message(self.turn_context, message)
-            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "token", re.sub("(?i)token", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
-        
-        elif re.match("(?i)^(org_id ).{20,}", query):
-            message = DEFAULT_RESPONSES["setting_org"]
-            await post_message(self.turn_context, message)
-            message = DEFAULT_RESPONSES["setting_creds_success"] if STORAGE.set_credentials(self.user_id, "org_id", re.sub("(?i)org_id", "", query).strip()) else DEFAULT_RESPONSES["setting_creds_error"]
-
-        else:
-            return False
-
-        await post_message(self.turn_context, message)
-        return True
 
 
 class Response_Handler:
     def __init__(self):
-        self.formatted_resp_lst = []
+        pass
     
-    def _text_handler(self, msg_block):
-        formatted_resp_text = ""
-        formatted_resp_text = "\n".join(msg_block['response'])
-        self.formatted_resp_lst.append(formatted_resp_text)
-
-    def generate_response_list(self, marvis_resp):
-        self.formatted_resp_lst = []
+    @staticmethod
+    def generate_response_list(marvis_resp):
+        formatted_resp_lst = []
 
         for num, msg_block in enumerate(marvis_resp):
             if msg_block.get('type') in ['text']:
-                self._text_handler(msg_block)
+                formatted_resp_text = ""
+                formatted_resp_text = "\n".join(msg_block['response'])
+                formatted_resp_lst.append(formatted_resp_text)
 
             elif isinstance(msg_block, dict):
                 formatted_response_text = ""
@@ -131,9 +126,9 @@ class Response_Handler:
                     else:
                         formatted_response_text = "{}<b> + {}:</b> {}<br>".format(formatted_response_text, str(key).capitalize(), str(msg_block[key]))
 
-                self.formatted_resp_lst.append(formatted_response_text)
+                formatted_resp_lst.append(formatted_response_text)
 
-        if len(self.formatted_resp_lst) == 0:
-            self.formatted_resp_lst.append(DEFAULT_RESPONSES["empty_response"])
+        if len(formatted_resp_lst) == 0:
+            formatted_resp_lst.append(DEFAULT_RESPONSES["empty_response"])
         
-        return self.formatted_resp_lst
+        return formatted_resp_lst
