@@ -61,7 +61,7 @@ class Cred_Ops():
 
     def _fetch_channel_credentials(self):
         token = os.environ.get("MIST_CHANNEL_TOKEN", "")
-        org_id = os.environ.get("MIST_ORG_ID", "")
+        org_id = os.environ.get("MIST_CHANNEL_ORG_ID", "")
         return token, org_id
 
     def _fetch_personal_credentials(self):
