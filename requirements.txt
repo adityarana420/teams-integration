@@ -7,3 +7,4 @@ pymongo==4.2.0
 python-dotenv==0.20.0
 requests==2.25.1
 pymongo[srv]
+gunicorn==20.1.0
