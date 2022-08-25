@@ -9,3 +9,4 @@ python-dotenv==0.20.0
 requests==2.25.1
 pymongo[srv]
 gunicorn==20.1.0
+uvicorn==0.18.3
