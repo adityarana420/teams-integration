@@ -60,10 +60,6 @@ async def on_error(context: TurnContext, error: Exception):
 
 ADAPTER.on_turn_error = on_error
 
-@app.route("/", methods=['GET'])
-async def greet():
-    return "Welcome!"
-
 @app.route("/api/messages", methods=['POST'])
 async def message():
     start = time.time()
