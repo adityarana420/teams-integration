@@ -5,7 +5,6 @@ class CustomStorage:
     @staticmethod
     def fetch_credentials_for_user(user_id):
         # add your logic from fetching credentials from your custom storage here
-
         token = org_id = ""
         return token, org_id
     
