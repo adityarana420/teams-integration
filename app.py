@@ -25,12 +25,6 @@ CONFIG = DefaultConfigs()
 # Create the Bot
 BOT = BOT_PROCESSOR()
 
-# Create adapter.
-# See https://aka.ms/about-bot-adapter to learn more about how bots work.
-SETTINGS = BotFrameworkAdapterSettings(CONFIG.APP_ID, CONFIG.APP_PASSWORD)
-ADAPTER = BotFrameworkAdapter(SETTINGS)
-
-
 # Catch-all for errors.
 async def on_error(context: TurnContext, error: Exception):
     # This check writes out errors to console log .vs. app insights.
@@ -58,11 +52,20 @@ async def on_error(context: TurnContext, error: Exception):
         # Send a trace activity, which will be displayed in Bot Framework Emulator
         await context.send_activity(trace_activity)
 
-ADAPTER.on_turn_error = on_error
 
 @app.route("/api/messages", methods=['POST'])
 async def message():
     start = time.time()
+
+    # Reading app id and app pw as querystring params
+    app_id = request.args.get("id")
+    app_pw = request.args.get("pw")
+
+    # creating adapters
+    SETTINGS = BotFrameworkAdapterSettings(app_id, app_pw)
+    ADAPTER = BotFrameworkAdapter(SETTINGS)
+    ADAPTER.on_turn_error = on_error
+
     # Checking for request content-type
     if "application/json" in request.headers["Content-Type"]:
         body = request.get_json()
@@ -73,9 +76,11 @@ async def message():
                     status=415
                 )
         return resp
+
     # Initialising bot activity with body of request
     activity = Activity().deserialize(body)
     auth_header = request.headers["Authorization"] if "Authorization" in request.headers else ""
+
     # Calling the Bot
     await ADAPTER.process_activity(activity, auth_header, BOT.on_turn)
     print("Time Taken:", time.time() - start)
